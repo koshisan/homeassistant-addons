@@ -1,6 +1,6 @@
 # Home Assistant Add-on: Wyoming OpenAI
 name: Wyoming OpenAI
-version: 0.1.3
+version: 0.1.4
 slug: wyoming-openai
 description: OpenAI-Compatible TTS/STT bridge for Wyoming Protocol with text preprocessing
 url: https://github.com/koshisan/wyoming_openai
