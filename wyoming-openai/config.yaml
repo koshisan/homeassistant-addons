@@ -1,0 +1,44 @@
+# Home Assistant Add-on: Wyoming OpenAI
+name: Wyoming OpenAI
+version: 0.1.0
+slug: wyoming-openai
+description: OpenAI-Compatible TTS/STT bridge for Wyoming Protocol with text preprocessing
+url: https://github.com/koshisan/wyoming_openai
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+init: false
+options:
+  uri: tcp://0.0.0.0:10300
+  log_level: info
+  languages: de en
+  tts_openai_url: http://localhost:7778/v1
+  tts_openai_key: dummy
+  tts_models: global_preset
+  tts_voices: chatterbox_de
+  tts_backend: OPENAI
+  tts_preprocessing_enabled: true
+  tts_custom_replacements: '{"Onii-chan":"Onii Chan","~":"","API":"A P I"}'
+  stt_openai_url: https://api.openai.com/v1
+  stt_openai_key: dummy
+  stt_models: whisper-1
+schema:
+  uri: str
+  log_level: list(debug|info|warning|error)?
+  languages: str
+  tts_openai_url: str
+  tts_openai_key: str?
+  tts_models: str
+  tts_voices: str?
+  tts_backend: list(OPENAI|SPEACHES)?
+  tts_preprocessing_enabled: bool?
+  tts_custom_replacements: str?
+  stt_openai_url: str?
+  stt_openai_key: str?
+  stt_models: str?
+ports:
+  10300/tcp: 10300
+image: ghcr.io/koshisan/wyoming-openai
