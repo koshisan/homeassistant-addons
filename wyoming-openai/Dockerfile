@@ -1,13 +1,14 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
+ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install Python and dependencies
+# Install system dependencies
 RUN apk add --no-cache \
-    python3 \
-    py3-pip
+    gcc \
+    musl-dev \
+    python3-dev
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
