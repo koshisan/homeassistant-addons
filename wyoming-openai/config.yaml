@@ -41,4 +41,3 @@ schema:
   stt_models: str?
 ports:
   10300/tcp: 10300
-image: ghcr.io/koshisan/wyoming-openai
