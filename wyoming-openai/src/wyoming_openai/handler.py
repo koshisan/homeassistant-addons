@@ -36,10 +36,9 @@ from .preprocessing import preprocess_for_tts, DEFAULT_REPLACEMENTS
 _LOGGER = logging.getLogger(__name__)
 
 def _truncate_for_log(text: str, max_length: int = 100) -> str:
-    """Truncate text for logging, adding ellipsis only if truncated."""
-    if len(text) <= max_length:
-        return text
-    return text[:max_length] + "..."
+    """Truncate text for logging, adding ellipsis only if truncated. (DISABLED - returns full text)"""
+    # Truncation disabled - always return full text for complete logging
+    return text
 
 DEFAULT_AUDIO_WIDTH = 2  # 16-bit audio
 DEFAULT_AUDIO_CHANNELS = 1  # Mono audio
@@ -678,8 +677,14 @@ class OpenAIEventHandler(AsyncEventHandler):
             if not voice:
                 return False
 
+            # Log original text BEFORE preprocessing
+            _LOGGER.info("TTS text BEFORE preprocessing: %s", synthesize.text)
+
             # Preprocess text for TTS
             cleaned_text = self._preprocess_tts_text(synthesize.text)
+
+            # Log cleaned text AFTER preprocessing
+            _LOGGER.info("TTS text AFTER preprocessing: %s", cleaned_text)
 
             # Use shared streaming logic
             final_timestamp = await self._stream_tts_audio(voice, cleaned_text, send_audio_start=True)
@@ -733,10 +738,12 @@ class OpenAIEventHandler(AsyncEventHandler):
             return False
 
         chunk_text = synthesize_chunk.text if synthesize_chunk.text else ""
-        _LOGGER.debug("Received synthesis chunk: '%s' (length: %d)", _truncate_for_log(chunk_text, 50), len(chunk_text))
+        _LOGGER.info("TTS chunk BEFORE preprocessing: %s", chunk_text)
 
         # Preprocess chunk text for TTS
         cleaned_chunk = self._preprocess_tts_text(chunk_text)
+
+        _LOGGER.info("TTS chunk AFTER preprocessing: %s", cleaned_chunk)
 
         # Store in buffer for fallback compatibility
         self._synthesis_buffer.append(cleaned_chunk)
