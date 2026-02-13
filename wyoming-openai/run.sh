@@ -12,6 +12,7 @@ TTS_OPENAI_URL=$(bashio::config 'tts_openai_url')
 TTS_OPENAI_KEY=$(bashio::config 'tts_openai_key')
 TTS_MODELS=$(bashio::config 'tts_models')
 TTS_VOICES=$(bashio::config 'tts_voices')
+TTS_STREAMING_MODELS=$(bashio::config 'tts_streaming_models')
 TTS_BACKEND=$(bashio::config 'tts_backend')
 TTS_PREPROCESSING=$(bashio::config 'tts_preprocessing_enabled')
 TTS_REPLACEMENTS=$(bashio::config 'tts_custom_replacements')
@@ -39,6 +40,10 @@ fi
 
 if bashio::config.has_value 'tts_voices'; then
     CMD+=(--tts-voices $TTS_VOICES)
+fi
+
+if bashio::config.has_value 'tts_streaming_models'; then
+    CMD+=(--tts-streaming-models $TTS_STREAMING_MODELS)
 fi
 
 if bashio::config.has_value 'tts_backend'; then
