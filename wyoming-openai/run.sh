@@ -42,6 +42,10 @@ if bashio::config.has_value 'tts_voices'; then
     CMD+=(--tts-voices $TTS_VOICES)
 fi
 
+# Debug: show what we got for streaming models
+bashio::log.info "TTS_STREAMING_MODELS value: '${TTS_STREAMING_MODELS}'"
+bashio::log.info "has_value check: $(bashio::config.has_value 'tts_streaming_models' && echo 'true' || echo 'false')"
+
 if bashio::config.has_value 'tts_streaming_models'; then
     CMD+=(--tts-streaming-models $TTS_STREAMING_MODELS)
 fi
