@@ -204,7 +204,6 @@ async def main():
     _logger = logging.getLogger(__name__)
 
     _logger.info("Starting Wyoming OpenAI %s", __version__)
-    _logger.warning("🐍 NADEKO DEBUG: streaming_enabled: %s (--no-streaming flag: %s)", not args.no_streaming, args.no_streaming)
 
     # Parse custom replacements from JSON if provided
     tts_custom_replacements = None
@@ -266,12 +265,19 @@ async def main():
         info = create_info(asr_programs, tts_programs)
 
         # Log Wyoming Info structure sent to Home Assistant
-        _logger.warning("🐍 NADEKO DEBUG: ========== WYOMING INFO MESSAGE ==========")
+        _logger.warning("🐍 NADEKO DEBUG: ========================================")
+        _logger.warning("🐍 NADEKO DEBUG: WYOMING INFO (STARTUP)")
+        _logger.warning("🐍 NADEKO DEBUG: ========================================")
+        _logger.warning("🐍 NADEKO DEBUG: streaming_enabled: %s", not args.no_streaming)
+        _logger.warning("🐍 NADEKO DEBUG: --no-streaming flag: %s", args.no_streaming)
+        _logger.warning("🐍 NADEKO DEBUG: ")
         for tts_prog in info.tts:
             _logger.warning("🐍 NADEKO DEBUG: TTS Program: %s", tts_prog.name)
             _logger.warning("🐍 NADEKO DEBUG:   supports_synthesize_streaming: %s", getattr(tts_prog, 'supports_synthesize_streaming', 'NOT SET'))
             _logger.warning("🐍 NADEKO DEBUG:   Voices: %s", [v.name for v in tts_prog.voices])
-        _logger.warning("🐍 NADEKO DEBUG: ==========================================")
+        _logger.warning("🐍 NADEKO DEBUG: ")
+        _logger.warning("🐍 NADEKO DEBUG: Full Info object: %s", info)
+        _logger.warning("🐍 NADEKO DEBUG: ========================================")
 
         # Log the model configurations
         if asr_programs:

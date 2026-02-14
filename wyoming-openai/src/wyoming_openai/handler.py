@@ -64,6 +64,17 @@ class TtsStreamError(Exception):
 
 
 class OpenAIEventHandler(AsyncEventHandler):
+    
+    async def write_event(self, event) -> None:
+        """Override to log all outgoing events."""
+        # Log everything we send back (except super spammy AudioChunk)
+        event_type = event.get('type', 'unknown') if isinstance(event, dict) else 'unknown'
+        if event_type != 'audio-chunk':
+            _LOGGER.warning("🐍 NADEKO DEBUG: ========== OUTGOING EVENT ==========")
+            _LOGGER.warning("🐍 NADEKO DEBUG: Sending event type: %s", event_type)
+            _LOGGER.warning("🐍 NADEKO DEBUG: Full event: %s", event)
+            _LOGGER.warning("🐍 NADEKO DEBUG: ==========================================")
+        return await super().write_event(event)
     def __init__(
         self,
         *args,
@@ -147,6 +158,14 @@ class OpenAIEventHandler(AsyncEventHandler):
         Handle incoming events
         https://github.com/OHF-Voice/wyoming?tab=readme-ov-file#event-types
         """
+        # Log EVERYTHING (except super spammy AudioChunk)
+        if not AudioChunk.is_type(event.type):
+            _LOGGER.warning("🐍 NADEKO DEBUG: ========== INCOMING EVENT ==========")
+            _LOGGER.warning("🐍 NADEKO DEBUG: Event type: %s", event.type)
+            _LOGGER.warning("🐍 NADEKO DEBUG: Event data: %s", event.data)
+            _LOGGER.warning("🐍 NADEKO DEBUG: Full event: %s", event)
+            _LOGGER.warning("🐍 NADEKO DEBUG: ==========================================")
+        
         if AudioChunk.is_type(event.type):
             # Non-logging because spammy
             await self._handle_audio_chunk(AudioChunk.from_event(event))
@@ -184,6 +203,7 @@ class OpenAIEventHandler(AsyncEventHandler):
 
         if not self._streaming_enabled:
             # Streaming events not supported
+            _LOGGER.warning("🐍 NADEKO DEBUG: IGNORING streaming event (streaming_enabled=False): %s", event.type)
             return True
 
         if SynthesizeStart.is_type(event.type):
@@ -196,11 +216,15 @@ class OpenAIEventHandler(AsyncEventHandler):
             return await self._handle_synthesize_stop()
 
         if Describe.is_type(event.type):
-            _LOGGER.warning("🐍 NADEKO DEBUG: Client requested Info, sending Wyoming Info with TTS programs:")
+            _LOGGER.warning("🐍 NADEKO DEBUG: ========== CLIENT REQUESTED INFO ==========")
+            _LOGGER.warning("🐍 NADEKO DEBUG: Sending Wyoming Info")
             for tts_prog in self._wyoming_info.tts:
-                _LOGGER.warning("🐍 NADEKO DEBUG:   Program: %s | supports_synthesize_streaming: %s", 
-                              tts_prog.name, 
+                _LOGGER.warning("🐍 NADEKO DEBUG:   TTS Program: %s", tts_prog.name)
+                _LOGGER.warning("🐍 NADEKO DEBUG:     supports_synthesize_streaming: %s", 
                               getattr(tts_prog, 'supports_synthesize_streaming', 'NOT SET'))
+                _LOGGER.warning("🐍 NADEKO DEBUG:     Voices: %s", [v.name for v in tts_prog.voices])
+            _LOGGER.warning("🐍 NADEKO DEBUG: Full Info event: %s", self._wyoming_info.event())
+            _LOGGER.warning("🐍 NADEKO DEBUG: ==========================================")
             await self.write_event(self._wyoming_info.event())
             return True
 
