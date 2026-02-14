@@ -702,6 +702,7 @@ class OpenAIEventHandler(AsyncEventHandler):
 
     async def _handle_synthesize_start(self, synthesize_start: SynthesizeStart) -> bool:
         """Handle start of streaming synthesis"""
+        _LOGGER.warning("🐍 NADEKO DEBUG: ========== SYNTHESIS START ==========")
         _LOGGER.debug("Handling synthesize-start event: %s", synthesize_start)
 
         # Reset synthesis state
@@ -738,6 +739,7 @@ class OpenAIEventHandler(AsyncEventHandler):
             return False
 
         chunk_text = synthesize_chunk.text if synthesize_chunk.text else ""
+        _LOGGER.warning("🐍 NADEKO DEBUG: Received TTS chunk (%d chars): %s", len(chunk_text), chunk_text[:100])
         _LOGGER.info("TTS chunk BEFORE preprocessing: %s", chunk_text)
 
         # Preprocess chunk text for TTS
@@ -790,6 +792,9 @@ class OpenAIEventHandler(AsyncEventHandler):
             return False
 
         self._is_synthesizing = False
+
+        # Log total chunks received
+        _LOGGER.warning("🐍 NADEKO DEBUG: ========== SYNTHESIS STOP (received %d chunks) ==========", len(self._synthesis_buffer))
 
         # Process any remaining text in the accumulator (even if it's incomplete)
         # This is the final text, so we process it regardless of sentence completion

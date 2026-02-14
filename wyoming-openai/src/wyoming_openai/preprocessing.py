@@ -9,16 +9,19 @@ _LOGGER = logging.getLogger(__name__)
 
 def remove_emojis(text: str) -> str:
     """
-    Remove emojis from text.
+    Remove emojis from text, adding period if emoji was before newline.
     
     Uses a comprehensive Unicode emoji pattern to detect and remove
     emoji characters that would sound awkward in TTS.
+    
+    If an emoji is found before a newline and there's no punctuation,
+    a period is added to maintain proper sentence flow.
     
     Args:
         text: Input text possibly containing emojis
         
     Returns:
-        Text with emojis removed
+        Text with emojis removed and proper punctuation
     """
     # Comprehensive emoji pattern (Unicode ranges for emoji)
     emoji_pattern = re.compile(
@@ -35,7 +38,50 @@ def remove_emojis(text: str) -> str:
         "]+",
         flags=re.UNICODE
     )
+    
+    # Find emojis before newlines without punctuation and add period
+    # Pattern: emoji(s) + optional whitespace + newline, not preceded by punctuation
+    def add_period_before_newline(match):
+        emoji_text = match.group(1)
+        # Check if there's already punctuation before the emoji
+        start = match.start()
+        if start > 0 and text[start - 1] in '.!?,;:':
+            return '\n'  # Already has punctuation, just remove emoji
+        return '.\n'  # Add period before newline
+    
+    text = re.sub(emoji_pattern.pattern + r'\s*\n', add_period_before_newline, text, flags=re.UNICODE)
+    
+    # Remove remaining emojis (not before newlines)
     return emoji_pattern.sub('', text)
+
+
+def remove_brackets_and_quotes(text: str) -> str:
+    """
+    Remove all types of brackets and quotation marks.
+    
+    Removes:
+    - Parentheses: ( )
+    - Square brackets: [ ]
+    - Curly braces: { }
+    - Angle brackets: < >
+    - Double quotes: " " " "
+    - Single quotes: ' ' ' '
+    - Backticks: `
+    - Guillemets: « »
+    
+    Args:
+        text: Input text with brackets/quotes
+        
+    Returns:
+        Text with brackets and quotes removed
+    """
+    # Remove all types of brackets (keep content)
+    text = re.sub(r'[\(\)\[\]\{\}<>]', '', text)
+    
+    # Remove all types of quotation marks
+    text = re.sub(r'["""\'\'\'`«»]', '', text)
+    
+    return text
 
 
 def remove_markdown(text: str) -> str:
@@ -120,6 +166,7 @@ def preprocess_for_tts(
     *,
     remove_emoji: bool = True,
     remove_md: bool = True,
+    remove_brackets_quotes: bool = True,
     custom_replacements: Dict[str, str] | None = None,
     normalize_pause: bool = True
 ) -> str:
@@ -128,8 +175,9 @@ def preprocess_for_tts(
     
     Args:
         text: Input text (possibly with emojis, markdown, etc.)
-        remove_emoji: Remove emoji characters
+        remove_emoji: Remove emoji characters (and add period before newline if needed)
         remove_md: Remove markdown formatting
+        remove_brackets_quotes: Remove all types of brackets and quotation marks
         custom_replacements: Custom string replacements
         normalize_pause: Normalize pause markers
         
@@ -141,7 +189,7 @@ def preprocess_for_tts(
         ...     "**Hello** world! 🐍 Check API docs...",
         ...     custom_replacements={"API": "A P I"}
         ... )
-        'Hello world! Check A P I docs,'
+        'Hello world. Check A P I docs,'
     """
     original_text = text
     
@@ -150,6 +198,9 @@ def preprocess_for_tts(
     
     if remove_md:
         text = remove_markdown(text)
+    
+    if remove_brackets_quotes:
+        text = remove_brackets_and_quotes(text)
     
     if custom_replacements:
         text = apply_custom_replacements(text, custom_replacements)
