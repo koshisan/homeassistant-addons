@@ -192,6 +192,11 @@ async def main():
         default=os.getenv("TTS_CUSTOM_REPLACEMENTS"),
         help="Custom text replacements as JSON dict (e.g. '{\"API\": \"A P I\", \"~\": \"\"}')"
     )
+    parser.add_argument(
+        "--no-streaming",
+        action="store_true",
+        help="Disable TTS input streaming (SynthesizeStart/Chunk/Stop events)"
+    )
 
     args = parser.parse_args()
 
@@ -248,7 +253,9 @@ async def main():
             # Otherwise, list supported voices via backend (with streaming fallback)
             tts_voices = await tts_client.list_supported_voices(args.tts_models, args.tts_streaming_models, args.languages)
 
-        tts_programs = create_tts_programs(tts_voices, tts_streaming_models=args.tts_streaming_models)
+        # Only enable streaming in programs if --no-streaming flag is not set
+        effective_streaming_models = args.tts_streaming_models if not args.no_streaming else []
+        tts_programs = create_tts_programs(tts_voices, tts_streaming_models=effective_streaming_models)
 
         # Ensure at least one model is specified
         if not asr_programs and not tts_programs:
@@ -330,7 +337,8 @@ async def main():
                 tts_streaming_min_words=args.tts_streaming_min_words,
                 tts_streaming_max_chars=args.tts_streaming_max_chars,
                 tts_preprocessing_enabled=args.tts_preprocessing_enabled,
-                tts_custom_replacements=tts_custom_replacements
+                tts_custom_replacements=tts_custom_replacements,
+                streaming_enabled=(not args.no_streaming)
             )
         )
 

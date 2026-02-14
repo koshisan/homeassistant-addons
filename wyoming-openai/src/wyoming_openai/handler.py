@@ -78,6 +78,7 @@ class OpenAIEventHandler(AsyncEventHandler):
         tts_streaming_max_chars: int | None = None,
         tts_preprocessing_enabled: bool = True,
         tts_custom_replacements: dict[str, str] | None = None,
+        streaming_enabled: bool = True,
         **kwargs,
     ) -> None:
         """
@@ -112,6 +113,9 @@ class OpenAIEventHandler(AsyncEventHandler):
         # TTS preprocessing options
         self._tts_preprocessing_enabled = tts_preprocessing_enabled
         self._tts_custom_replacements = tts_custom_replacements or DEFAULT_REPLACEMENTS
+        
+        # Streaming support
+        self._streaming_enabled = streaming_enabled
 
         # State for current transcription
         self._wav_buffer: NamedBytesIO | None = None
@@ -172,7 +176,15 @@ class OpenAIEventHandler(AsyncEventHandler):
             return True
 
         if Synthesize.is_type(event.type):
+            if self._is_synthesizing:
+                # Ignore - sent for compatibility during streaming
+                # Streaming flow: [synthesize-start] -> [synthesize-chunk]+ -> [synthesize]? -> [synthesize-stop]
+                return True
             return await self._handle_synthesize(Synthesize.from_event(event))
+
+        if not self._streaming_enabled:
+            # Streaming events not supported
+            return True
 
         if SynthesizeStart.is_type(event.type):
             return await self._handle_synthesize_start(SynthesizeStart.from_event(event))
