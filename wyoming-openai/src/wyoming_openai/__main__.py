@@ -257,6 +257,14 @@ async def main():
 
         info = create_info(asr_programs, tts_programs)
 
+        # Log Wyoming Info structure sent to Home Assistant
+        _logger.warning("🐍 NADEKO DEBUG: ========== WYOMING INFO MESSAGE ==========")
+        for tts_prog in info.tts:
+            _logger.warning("🐍 NADEKO DEBUG: TTS Program: %s", tts_prog.name)
+            _logger.warning("🐍 NADEKO DEBUG:   supports_synthesize_streaming: %s", getattr(tts_prog, 'supports_synthesize_streaming', 'NOT SET'))
+            _logger.warning("🐍 NADEKO DEBUG:   Voices: %s", [v.name for v in tts_prog.voices])
+        _logger.warning("🐍 NADEKO DEBUG: ==========================================")
+
         # Log the model configurations
         if asr_programs:
             streaming_asr_models_for_logging = []

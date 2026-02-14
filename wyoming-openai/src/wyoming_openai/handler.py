@@ -184,6 +184,11 @@ class OpenAIEventHandler(AsyncEventHandler):
             return await self._handle_synthesize_stop()
 
         if Describe.is_type(event.type):
+            _LOGGER.warning("🐍 NADEKO DEBUG: Client requested Info, sending Wyoming Info with TTS programs:")
+            for tts_prog in self._wyoming_info.tts:
+                _LOGGER.warning("🐍 NADEKO DEBUG:   Program: %s | supports_synthesize_streaming: %s", 
+                              tts_prog.name, 
+                              getattr(tts_prog, 'supports_synthesize_streaming', 'NOT SET'))
             await self.write_event(self._wyoming_info.event())
             return True
 
