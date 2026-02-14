@@ -193,9 +193,9 @@ async def main():
         help="Custom text replacements as JSON dict (e.g. '{\"API\": \"A P I\", \"~\": \"\"}')"
     )
     parser.add_argument(
-        "--streaming",
+        "--no-streaming",
         action="store_true",
-        help="Enable TTS input streaming (SynthesizeStart/Chunk/Stop events)"
+        help="DISABLE TTS input streaming (SynthesizeStart/Chunk/Stop events)"
     )
 
     args = parser.parse_args()
@@ -204,6 +204,7 @@ async def main():
     _logger = logging.getLogger(__name__)
 
     _logger.info("Starting Wyoming OpenAI %s", __version__)
+    _logger.warning("🐍 NADEKO DEBUG: streaming_enabled: %s (--no-streaming flag: %s)", not args.no_streaming, args.no_streaming)
 
     # Parse custom replacements from JSON if provided
     tts_custom_replacements = None
@@ -253,8 +254,8 @@ async def main():
             # Otherwise, list supported voices via backend (with streaming fallback)
             tts_voices = await tts_client.list_supported_voices(args.tts_models, args.tts_streaming_models, args.languages)
 
-        # Only enable streaming in programs if --streaming flag is set
-        effective_streaming_models = args.tts_streaming_models if args.streaming else []
+        # Only enable streaming in programs if --no-streaming flag is NOT set
+        effective_streaming_models = args.tts_streaming_models if not args.no_streaming else []
         tts_programs = create_tts_programs(tts_voices, tts_streaming_models=effective_streaming_models)
 
         # Ensure at least one model is specified
@@ -338,7 +339,7 @@ async def main():
                 tts_streaming_max_chars=args.tts_streaming_max_chars,
                 tts_preprocessing_enabled=args.tts_preprocessing_enabled,
                 tts_custom_replacements=tts_custom_replacements,
-                streaming_enabled=args.streaming
+                streaming_enabled=(not args.no_streaming)
             )
         )
 

@@ -75,9 +75,6 @@ if bashio::config.has_value 'stt_models'; then
     CMD+=(--stt-models $STT_MODELS)
 fi
 
-# Enable streaming by default
-CMD+=(--streaming)
-
 bashio::log.info "Command: ${CMD[*]}"
 
 # Run Wyoming OpenAI
