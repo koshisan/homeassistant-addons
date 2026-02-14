@@ -39,19 +39,20 @@ def remove_emojis(text: str) -> str:
         flags=re.UNICODE
     )
     
-    # Find emojis before newlines without punctuation and add period
-    # Pattern: emoji(s) + optional whitespace + newline, not preceded by punctuation
-    def add_period_before_newline(match):
-        emoji_text = match.group(1)
-        # Check if there's already punctuation before the emoji
-        start = match.start()
-        if start > 0 and text[start - 1] in '.!?,;:':
-            return '\n'  # Already has punctuation, just remove emoji
-        return '.\n'  # Add period before newline
+    # Two-pass approach:
+    # 1. Handle emojis before newlines (add period if no punctuation before emoji)
+    # 2. Remove all remaining emojis
     
-    text = re.sub(emoji_pattern.pattern + r'\s*\n', add_period_before_newline, text, flags=re.UNICODE)
+    # Pass 1: Emoji + optional whitespace before newline, WITHOUT punctuation before emoji → add period
+    # Lookahead (?=\n) matches position before newline without consuming it
+    text = re.sub(
+        r'(?<![.!?,;:])' + emoji_pattern.pattern + r'\s*(?=\n)',
+        '.',
+        text,
+        flags=re.UNICODE
+    )
     
-    # Remove remaining emojis (not before newlines)
+    # Pass 2: Remove ALL remaining emojis (including those with punctuation, or not at line end)
     return emoji_pattern.sub('', text)
 
 
