@@ -814,8 +814,7 @@ class OpenAIEventHandler(AsyncEventHandler):
         # Process complete sentences (all but the last one). A trailing line
         # break ends the paragraph (e.g. a preamble before tool calls), so the
         # last sentence is complete too and is spoken without waiting for more.
-        paragraph_end = self._text_accumulator.rstrip(" 	").endswith("
-")
+        paragraph_end = self._text_accumulator.rstrip(" \t").endswith("\n")
         if len(sentences) > 1 or (paragraph_end and sentences):
             ready_sentences = sentences if paragraph_end else sentences[:-1]
 
