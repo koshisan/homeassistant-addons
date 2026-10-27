@@ -45,7 +45,10 @@ DEFAULT_AUDIO_CHANNELS = 1  # Mono audio
 DEFAULT_ASR_AUDIO_RATE = 16000  # Hz (Wyoming default)
 TTS_AUDIO_RATE = 24000  # Hz (OpenAI spec, fallback)
 TTS_CHUNK_SIZE = 2048  # Magical guess - but must be larger than 44 bytes for a potential WAV header
-TTS_CONCURRENT_REQUESTS = 3  # Number of concurrent OpenAI TTS requests when streaming sentences
+# Number of concurrent OpenAI TTS requests when streaming sentences. 1 keeps
+# them in order: a backend with a single job queue (ComfyUI) otherwise runs
+# simultaneous requests in arbitrary order, so sentence 1 often came last.
+TTS_CONCURRENT_REQUESTS = 1
 
 
 @dataclass(frozen=True)
@@ -808,12 +811,16 @@ class OpenAIEventHandler(AsyncEventHandler):
         # Segment the entire accumulated text
         sentences = segmenter.segment(self._text_accumulator)
 
-        # Process complete sentences (all but the last one)
-        if len(sentences) > 1:
-            ready_sentences = sentences[:-1]
+        # Process complete sentences (all but the last one). A trailing line
+        # break ends the paragraph (e.g. a preamble before tool calls), so the
+        # last sentence is complete too and is spoken without waiting for more.
+        paragraph_end = self._text_accumulator.rstrip(" 	").endswith("
+")
+        if len(sentences) > 1 or (paragraph_end and sentences):
+            ready_sentences = sentences if paragraph_end else sentences[:-1]
 
-            # Keep only the last sentence in the accumulator
-            self._text_accumulator = sentences[-1]
+            # Keep only the unfinished last sentence in the accumulator
+            self._text_accumulator = "" if paragraph_end else sentences[-1]
 
             _LOGGER.info("Detected %d ready sentences for immediate synthesis: %s",
                         len(ready_sentences),
